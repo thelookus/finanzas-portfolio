@@ -1,0 +1,10 @@
+[
+  {
+    "date": "2026-02-20T15:06:03.900Z",
+    "model": "claude-sonnet-4-20250514",
+    "feature": "advisor",
+    "inputTokens": 1398,
+    "outputTokens": 1004,
+    "costUsd": 0.019254
+  }
+]

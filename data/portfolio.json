@@ -1,0 +1,118 @@
+{
+  "holdings": [
+    {
+      "ticker": "COHU",
+      "totalShares": 4.105294790,
+      "totalInvested": 110.01,
+      "sector": "Semiconductor Equipment",
+      "transactions": [
+        { "ticker": "COHU", "date": "2025-12-12", "costUsd": 50.01, "shares": 2.023348035, "pricePerShare": 24.72 },
+        { "ticker": "COHU", "date": "2026-01-30", "costUsd": 35.00, "shares": 1.250000000, "pricePerShare": 28.00 },
+        { "ticker": "COHU", "date": "2026-02-15", "costUsd": 25.00, "shares": 0.831946755, "pricePerShare": 30.05 }
+      ]
+    },
+    {
+      "ticker": "YPF",
+      "totalShares": 2.119087957,
+      "totalInvested": 75.45,
+      "sector": "Oil & Gas (Argentina)",
+      "transactions": [
+        { "ticker": "YPF", "date": "2025-11-24", "costUsd": 50.00, "shares": 1.435132032, "pricePerShare": 34.84 },
+        { "ticker": "YPF", "date": "2026-02-15", "costUsd": 25.45, "shares": 0.683955925, "pricePerShare": 37.21 }
+      ]
+    },
+    {
+      "ticker": "XLG",
+      "totalShares": 0.854881049,
+      "totalInvested": 50.00,
+      "sector": "ETF - S&P 500 Top 50",
+      "transactions": [
+        { "ticker": "XLG", "date": "2025-10-21", "costUsd": 25.00, "shares": 0.429479470, "pricePerShare": 58.21 },
+        { "ticker": "XLG", "date": "2025-10-24", "costUsd": 25.00, "shares": 0.425401579, "pricePerShare": 58.77 }
+      ]
+    },
+    {
+      "ticker": "KLIC",
+      "totalShares": 0.856527132,
+      "totalInvested": 49.00,
+      "sector": "Semiconductor Equipment",
+      "transactions": [
+        { "ticker": "KLIC", "date": "2025-12-12", "costUsd": 25.00, "shares": 0.515230204, "pricePerShare": 48.52 },
+        { "ticker": "KLIC", "date": "2026-02-15", "costUsd": 24.00, "shares": 0.341296928, "pricePerShare": 70.32 }
+      ]
+    },
+    {
+      "ticker": "CCJ",
+      "totalShares": 0.379824366,
+      "totalInvested": 47.00,
+      "sector": "Uranium",
+      "transactions": [
+        { "ticker": "CCJ", "date": "2026-01-30", "costUsd": 12.00, "shares": 0.093385214, "pricePerShare": 128.50 },
+        { "ticker": "CCJ", "date": "2026-01-30", "costUsd": 35.00, "shares": 0.286439152, "pricePerShare": 122.19 }
+      ]
+    },
+    {
+      "ticker": "FCX",
+      "totalShares": 0.406504065,
+      "totalInvested": 25.00,
+      "sector": "Copper Mining",
+      "transactions": [
+        { "ticker": "FCX", "date": "2026-01-30", "costUsd": 25.00, "shares": 0.406504065, "pricePerShare": 61.50 }
+      ]
+    },
+    {
+      "ticker": "GLDM",
+      "totalShares": 0.249128051,
+      "totalInvested": 25.00,
+      "sector": "ETF - Gold",
+      "transactions": [
+        { "ticker": "GLDM", "date": "2026-01-30", "costUsd": 25.00, "shares": 0.249128051, "pricePerShare": 100.35 }
+      ]
+    },
+    {
+      "ticker": "CAMT",
+      "totalShares": 0.214629120,
+      "totalInvested": 25.00,
+      "sector": "Semiconductor Equipment",
+      "transactions": [
+        { "ticker": "CAMT", "date": "2025-12-12", "costUsd": 25.00, "shares": 0.214629120, "pricePerShare": 116.48 }
+      ]
+    },
+    {
+      "ticker": "SPY",
+      "totalShares": 0.147466960,
+      "totalInvested": 100.00,
+      "sector": "ETF - S&P 500",
+      "transactions": [
+        { "ticker": "SPY", "date": "2025-10-24", "costUsd": 100.00, "shares": 0.147466960, "pricePerShare": 678.17 }
+      ]
+    },
+    {
+      "ticker": "SOXX",
+      "totalShares": 0.168295769,
+      "totalInvested": 50.00,
+      "sector": "ETF - Semiconductors",
+      "transactions": [
+        { "ticker": "SOXX", "date": "2025-10-24", "costUsd": 50.00, "shares": 0.168295769, "pricePerShare": 297.18 }
+      ]
+    },
+    {
+      "ticker": "QQQ",
+      "totalShares": 0.081327074,
+      "totalInvested": 50.00,
+      "sector": "ETF - Nasdaq 100",
+      "transactions": [
+        { "ticker": "QQQ", "date": "2025-10-21", "costUsd": 25.00, "shares": 0.040881068, "pricePerShare": 611.53 },
+        { "ticker": "QQQ", "date": "2025-10-24", "costUsd": 25.00, "shares": 0.040446006, "pricePerShare": 617.99 }
+      ]
+    }
+  ],
+  "dividends": [
+    { "date": "2026-01-30", "ticker": "SPY", "amount": 0.21 },
+    { "date": "2026-01-06", "ticker": "KLIC", "amount": 0.08 },
+    { "date": "2025-12-26", "ticker": "XLG", "amount": 0.06 },
+    { "date": "2025-12-31", "ticker": "QQQ", "amount": 0.05 },
+    { "date": "2025-12-19", "ticker": "SOXX", "amount": 0.05 }
+  ],
+  "totalInvested": 606.46
+}
