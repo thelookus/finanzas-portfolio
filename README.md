@@ -117,6 +117,80 @@ types/
 - Dark mode por defecto
 - Responsive: sidebar en desktop, bottom nav en mobile
 
+## Datos de Mercado: Yahoo Finance
+
+La app consume datos financieros de **Yahoo Finance** a través de la librería [`yahoo-finance2`](https://www.npmjs.com/package/yahoo-finance2) (v3). Es un wrapper no-oficial que no requiere API key — hace requests directos a los endpoints de Yahoo.
+
+### Funciones principales (`lib/yahoo-finance.ts`)
+
+| Función | Qué trae | Dónde se usa |
+|---------|----------|-------------|
+| `getQuote(ticker)` | Precio actual, cambio diario, P/E, market cap, 52W high/low, targets de analistas | Dashboard, Watchlist, Stock page |
+| `getQuotes(tickers[])` | Batch de quotes (llama `getQuote` en paralelo con `Promise.allSettled`) | Dashboard, Opportunities |
+| `getChart(ticker, range)` | **Datos históricos** — velas OHLCV (open, high, low, close, volume) | Stock page, Opportunities, DCA |
+| `getQuoteSummary(ticker)` | Datos fundamentales profundos (financialData, earnings, keyStats) | AI Analysis route |
+
+### Datos históricos: `getChart`
+
+```
+getChart("AAPL", "1y")
+   ↓
+yahoo-finance2.chart("AAPL", { period1: hace1año, interval: "1d" })
+   ↓
+Yahoo Finance API responde con array de velas
+   ↓
+Se filtra nulls y mapea a CandleData { date, open, high, low, close, volume }
+```
+
+**Rangos disponibles y sus intervalos:**
+
+| Range | Intervalo | Datos aprox |
+|-------|-----------|------------|
+| `1mo` | 1 día | ~22 velas |
+| `3mo` | 1 día | ~65 velas |
+| `6mo` | 1 día | ~130 velas |
+| `1y` | 1 día | ~252 velas |
+| `2y` | 1 semana | ~104 velas |
+| `5y` | 1 semana | ~260 velas |
+
+### Flujo completo en la Stock Page
+
+```
+app/stocks/[ticker]/page.tsx  (client component)
+   ↓  fetch(`/api/analysis?ticker=AAPL&range=6mo`)
+app/api/analysis/route.ts  (API route)
+   ↓  getChart("AAPL", "6mo") + getQuote("AAPL")
+lib/yahoo-finance.ts  →  yahoo-finance2  →  Yahoo Finance API
+   ↓
+computeTechnicalAnalysis(candles)  →  RSI, SMA, MACD, Bollinger
+   ↓
+Response: { candles, analysis, quote }
+   ↓
+PriceChart renders candles  +  TechnicalPanel shows indicators
+```
+
+### Flujo en Opportunities
+
+```
+app/opportunities/page.tsx  (server component)
+   ↓  getChart(ticker, "1y") para cada ticker
+lib/yahoo-finance.ts  →  Yahoo Finance
+   ↓
+computeTechnicalAnalysis  →  scoreOpportunity  →  Score 0-100
+```
+
+### Datos locales (no Yahoo Finance)
+
+Los holdings, transacciones y dividendos se guardan localmente en `data/portfolio.json`. Yahoo solo provee precios de mercado en tiempo real e históricos.
+
+### Resumen
+
+- **Fuente única:** Yahoo Finance (gratis, sin API key)
+- **Librería:** `yahoo-finance2` v3
+- **Datos históricos:** Método `.chart()` con velas OHLCV diarias/semanales
+- **Análisis técnico:** Se computa localmente con `technicalindicators` (RSI, SMA, EMA, MACD, Bollinger) a partir de los precios de cierre de las velas
+- **Cache:** La API route `/api/analysis` cachea 5 min (`s-maxage=300`)
+
 ## Scripts
 
 ```bash
