@@ -1,5 +1,7 @@
 import { db } from "./index";
-import { categories } from "./schema";
+import { categories, portfolioTransactions, portfolioDividends, watchlistItems, portfolioTickerMeta } from "./schema";
+import fs from "fs";
+import path from "path";
 
 interface CategorySeed {
   name: string;
@@ -59,5 +61,64 @@ export async function seedCategories(entityId: number, entityType: "personal" | 
         });
       }
     }
+  }
+}
+
+export async function migratePortfolioFromJson(userId: string) {
+  const portfolioPath = path.join(process.cwd(), "data", "portfolio.json");
+  const watchlistPath = path.join(process.cwd(), "data", "watchlist.json");
+
+  // Migrate portfolio
+  if (fs.existsSync(portfolioPath)) {
+    const data = JSON.parse(fs.readFileSync(portfolioPath, "utf-8"));
+
+    for (const holding of data.holdings || []) {
+      // Insert ticker meta
+      await db.insert(portfolioTickerMeta).values({
+        userId,
+        ticker: holding.ticker,
+        sector: holding.sector || "Unknown",
+      }).onConflictDoNothing();
+
+      // Insert transactions
+      for (const tx of holding.transactions || []) {
+        await db.insert(portfolioTransactions).values({
+          userId,
+          ticker: tx.ticker || holding.ticker,
+          date: tx.date,
+          shares: tx.shares,
+          pricePerShare: tx.pricePerShare,
+          costUsd: tx.costUsd,
+        });
+      }
+    }
+
+    // Insert dividends
+    for (const div of data.dividends || []) {
+      await db.insert(portfolioDividends).values({
+        userId,
+        ticker: div.ticker,
+        date: div.date,
+        amount: div.amount,
+      });
+    }
+
+    console.log(`Migrated portfolio: ${data.holdings?.length || 0} holdings, ${data.dividends?.length || 0} dividends`);
+  }
+
+  // Migrate watchlist
+  if (fs.existsSync(watchlistPath)) {
+    const items = JSON.parse(fs.readFileSync(watchlistPath, "utf-8"));
+
+    for (const item of items) {
+      await db.insert(watchlistItems).values({
+        userId,
+        ticker: item.ticker,
+        notes: item.notes || null,
+        addedAt: item.addedAt || new Date().toISOString(),
+      }).onConflictDoNothing();
+    }
+
+    console.log(`Migrated watchlist: ${items.length} items`);
   }
 }

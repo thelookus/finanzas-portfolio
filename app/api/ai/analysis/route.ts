@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { auth } from "@/lib/auth";
 import { getAnthropicClient, AI_MODEL, getSystemPrefix, createStreamingResponse } from "@/lib/ai";
 import { getQuote, getQuoteSummary, getChart } from "@/lib/yahoo-finance";
 import { getHolding } from "@/lib/portfolio";
@@ -9,6 +10,9 @@ import { getAvgCost, getPnL } from "@/lib/calculations";
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const store = await cookies();
     const locale = store.get("locale")?.value || "es-AR";
     const isEN = locale === "en";
@@ -25,7 +29,7 @@ export async function POST(request: NextRequest) {
       getQuote(ticker),
       getQuoteSummary(ticker),
       getChart(ticker, "1y"),
-      Promise.resolve(getHolding(ticker)),
+      getHolding(session.user.id, ticker),
     ]);
 
     if (!quote) {

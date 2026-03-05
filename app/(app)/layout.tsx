@@ -15,7 +15,7 @@ export default function AppLayout({
   return (
     <TooltipProvider>
       <div className="flex min-h-screen">
-        <aside className="hidden md:flex w-56 flex-col border-r border-border bg-card">
+        <aside className="hidden md:flex w-56 flex-col border-r border-border bg-card sticky top-0 h-screen overflow-y-auto">
           <div className="p-4 border-b border-border">
             <Link href="/" className="flex items-center gap-2">
               <ListStar size={24} weight="bold" className="text-primary" />

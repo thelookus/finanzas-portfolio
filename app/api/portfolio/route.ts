@@ -1,22 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { getHolding, getPortfolio, addTransaction, deleteTransaction, updateTransaction } from "@/lib/portfolio";
 
 export async function GET(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const ticker = request.nextUrl.searchParams.get("ticker");
 
   if (ticker) {
-    const holding = getHolding(ticker);
+    const holding = await getHolding(session.user.id, ticker);
     if (!holding) {
       return NextResponse.json(null, { status: 404 });
     }
     return NextResponse.json(holding);
   }
 
-  const portfolio = getPortfolio();
+  const portfolio = await getPortfolio(session.user.id);
   return NextResponse.json(portfolio);
 }
 
 export async function POST(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   try {
     const body = await request.json();
     const { ticker, date, costUsd, shares, pricePerShare, sector } = body;
@@ -43,7 +50,7 @@ export async function POST(request: NextRequest) {
       pricePerShare: Number(pricePerShare),
     };
 
-    const portfolio = addTransaction(transaction, sector);
+    const portfolio = await addTransaction(session.user.id, transaction, sector);
     return NextResponse.json(portfolio);
   } catch (error) {
     return NextResponse.json(
@@ -54,21 +61,24 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   try {
     const body = await request.json();
-    const { ticker, index, update } = body;
+    const { id, update } = body;
 
-    if (!ticker || index === undefined || !update) {
+    if (!id || !update) {
       return NextResponse.json(
-        { error: "Missing required fields: ticker, index, update" },
+        { error: "Missing required fields: id, update" },
         { status: 400 }
       );
     }
 
-    const parsedIndex = Number(index);
-    if (isNaN(parsedIndex)) {
+    const txId = Number(id);
+    if (isNaN(txId)) {
       return NextResponse.json(
-        { error: "index must be a number" },
+        { error: "id must be a number" },
         { status: 400 }
       );
     }
@@ -81,7 +91,7 @@ export async function PUT(request: NextRequest) {
     if (update.costUsd) updateData.costUsd = Number(update.costUsd);
     if (update.sector) updateData.sector = update.sector;
 
-    const portfolio = updateTransaction(ticker, parsedIndex, updateData);
+    const portfolio = await updateTransaction(session.user.id, txId, updateData);
     return NextResponse.json(portfolio);
   } catch (error) {
     return NextResponse.json(
@@ -92,26 +102,28 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   try {
-    const ticker = request.nextUrl.searchParams.get("ticker");
-    const indexStr = request.nextUrl.searchParams.get("index");
+    const idStr = request.nextUrl.searchParams.get("id");
 
-    if (!ticker || indexStr === null) {
+    if (!idStr) {
       return NextResponse.json(
-        { error: "Missing required params: ticker, index" },
+        { error: "Missing required param: id" },
         { status: 400 }
       );
     }
 
-    const index = parseInt(indexStr, 10);
-    if (isNaN(index)) {
+    const txId = parseInt(idStr, 10);
+    if (isNaN(txId)) {
       return NextResponse.json(
-        { error: "index must be a number" },
+        { error: "id must be a number" },
         { status: 400 }
       );
     }
 
-    const portfolio = deleteTransaction(ticker, index);
+    const portfolio = await deleteTransaction(session.user.id, txId);
     return NextResponse.json(portfolio);
   } catch (error) {
     return NextResponse.json(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Transaction } from "@/types";
 
 interface TransactionEditFormProps {
-  transaction: Transaction & { holdingIndex: number };
+  transaction: Transaction;
   existingTickers: string[];
   onClose: () => void;
 }
@@ -65,8 +65,7 @@ export function TransactionEditForm({
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ticker: transaction.ticker,
-          index: transaction.holdingIndex,
+          id: transaction.id,
           update: {
             ticker: ticker.toUpperCase(),
             date,

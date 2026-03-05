@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { auth } from "@/lib/auth";
 import { getPortfolio, getWatchlist } from "@/lib/portfolio";
 import { getQuotes, getChart } from "@/lib/yahoo-finance";
 import { computeTechnicalAnalysis } from "@/lib/technical-analysis";
@@ -42,8 +43,10 @@ function ScoreBadge({ score }: { score: number }) {
 
 async function OpportunitiesContent() {
   const t = await getTranslations("Opportunities");
-  const portfolio = getPortfolio();
-  const watchlist = getWatchlist();
+  const session = await auth();
+  const userId = session!.user!.id as string;
+  const portfolio = await getPortfolio(userId);
+  const watchlist = await getWatchlist(userId);
 
   const allTickers = [
     ...new Set([

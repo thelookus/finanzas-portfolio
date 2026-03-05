@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, uniqueIndex, primaryKey } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real, uniqueIndex, primaryKey, index } from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
@@ -105,6 +105,51 @@ export const budgets = sqliteTable("budgets", {
   budgetedAmount: real("budgeted_amount").notNull(),
 }, (table) => [
   uniqueIndex("budget_unique").on(table.entityId, table.categoryId, table.year, table.month),
+]);
+
+// Portfolio tables
+
+export const portfolioTransactions = sqliteTable("portfolio_transactions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: text("user_id").notNull().references(() => users.id),
+  ticker: text("ticker").notNull(),
+  date: text("date").notNull(),
+  shares: real("shares").notNull(),
+  pricePerShare: real("price_per_share").notNull(),
+  costUsd: real("cost_usd").notNull(),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+}, (table) => [
+  index("pt_user_ticker").on(table.userId, table.ticker),
+]);
+
+export const portfolioDividends = sqliteTable("portfolio_dividends", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: text("user_id").notNull().references(() => users.id),
+  ticker: text("ticker").notNull(),
+  date: text("date").notNull(),
+  amount: real("amount").notNull(),
+  createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
+}, (table) => [
+  index("pd_user_ticker").on(table.userId, table.ticker),
+]);
+
+export const watchlistItems = sqliteTable("watchlist_items", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: text("user_id").notNull().references(() => users.id),
+  ticker: text("ticker").notNull(),
+  notes: text("notes"),
+  addedAt: text("added_at").notNull().$defaultFn(() => new Date().toISOString()),
+}, (table) => [
+  uniqueIndex("wi_user_ticker").on(table.userId, table.ticker),
+]);
+
+export const portfolioTickerMeta = sqliteTable("portfolio_ticker_meta", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: text("user_id").notNull().references(() => users.id),
+  ticker: text("ticker").notNull(),
+  sector: text("sector").notNull(),
+}, (table) => [
+  uniqueIndex("ptm_user_ticker").on(table.userId, table.ticker),
 ]);
 
 export const imports = sqliteTable("imports", {
