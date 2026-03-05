@@ -101,6 +101,78 @@ export function deleteTransaction(ticker: string, index: number): Portfolio {
   return portfolio;
 }
 
+export function updateTransaction(
+  ticker: string,
+  index: number,
+  updatedData: Partial<Transaction> & { sector?: string }
+): Portfolio {
+  const portfolio = getPortfolio();
+  const holding = portfolio.holdings.find(
+    (h) => h.ticker.toUpperCase() === ticker.toUpperCase()
+  );
+
+  if (!holding) {
+    throw new Error(`Holding not found: ${ticker}`);
+  }
+
+  if (index < 0 || index >= holding.transactions.length) {
+    throw new Error(`Transaction index out of range: ${index}`);
+  }
+
+  const oldTransaction = holding.transactions[index];
+  const newTicker = updatedData.ticker?.toUpperCase();
+  const tickerChanged = newTicker && newTicker !== holding.ticker.toUpperCase();
+
+  if (tickerChanged) {
+    // Remove from original holding
+    holding.transactions.splice(index, 1);
+    if (holding.transactions.length === 0) {
+      portfolio.holdings = portfolio.holdings.filter(
+        (h) => h.ticker.toUpperCase() !== ticker.toUpperCase()
+      );
+    } else {
+      recalcHolding(holding);
+    }
+
+    // Build the moved transaction
+    const movedTransaction: Transaction = {
+      ticker: newTicker,
+      date: updatedData.date ?? oldTransaction.date,
+      shares: updatedData.shares ?? oldTransaction.shares,
+      pricePerShare: updatedData.pricePerShare ?? oldTransaction.pricePerShare,
+      costUsd: updatedData.costUsd ?? oldTransaction.costUsd,
+    };
+
+    // Add to destination holding (create if needed)
+    let destHolding = portfolio.holdings.find(
+      (h) => h.ticker.toUpperCase() === newTicker
+    );
+    if (!destHolding) {
+      destHolding = {
+        ticker: newTicker,
+        totalShares: 0,
+        totalInvested: 0,
+        sector: updatedData.sector || "Unknown",
+        transactions: [],
+      };
+      portfolio.holdings.push(destHolding);
+    }
+    destHolding.transactions.push(movedTransaction);
+    recalcHolding(destHolding);
+  } else {
+    // Update in place
+    if (updatedData.date !== undefined) oldTransaction.date = updatedData.date;
+    if (updatedData.shares !== undefined) oldTransaction.shares = updatedData.shares;
+    if (updatedData.pricePerShare !== undefined) oldTransaction.pricePerShare = updatedData.pricePerShare;
+    if (updatedData.costUsd !== undefined) oldTransaction.costUsd = updatedData.costUsd;
+    recalcHolding(holding);
+  }
+
+  recalcPortfolioTotal(portfolio);
+  savePortfolio(portfolio);
+  return portfolio;
+}
+
 export function addDividend(dividend: Dividend): Portfolio {
   const portfolio = getPortfolio();
   portfolio.dividends.push(dividend);

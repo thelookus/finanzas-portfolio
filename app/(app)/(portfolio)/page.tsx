@@ -94,6 +94,7 @@ async function DashboardContent() {
           transactions={portfolio.holdings.flatMap((h) =>
             h.transactions.map((t, i) => ({ ...t, holdingIndex: i }))
           )}
+          existingTickers={portfolio.holdings.map((h) => h.ticker.toUpperCase())}
         />
         <DividendTracker dividends={portfolio.dividends} />
       </div>

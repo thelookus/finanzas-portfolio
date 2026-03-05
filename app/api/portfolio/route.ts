@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getHolding, getPortfolio, addTransaction, deleteTransaction } from "@/lib/portfolio";
+import { getHolding, getPortfolio, addTransaction, deleteTransaction, updateTransaction } from "@/lib/portfolio";
 
 export async function GET(request: NextRequest) {
   const ticker = request.nextUrl.searchParams.get("ticker");
@@ -48,6 +48,44 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to add transaction" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { ticker, index, update } = body;
+
+    if (!ticker || index === undefined || !update) {
+      return NextResponse.json(
+        { error: "Missing required fields: ticker, index, update" },
+        { status: 400 }
+      );
+    }
+
+    const parsedIndex = Number(index);
+    if (isNaN(parsedIndex)) {
+      return NextResponse.json(
+        { error: "index must be a number" },
+        { status: 400 }
+      );
+    }
+
+    const updateData: Record<string, unknown> = {};
+    if (update.ticker) updateData.ticker = String(update.ticker).toUpperCase();
+    if (update.date) updateData.date = update.date;
+    if (update.shares) updateData.shares = Number(update.shares);
+    if (update.pricePerShare) updateData.pricePerShare = Number(update.pricePerShare);
+    if (update.costUsd) updateData.costUsd = Number(update.costUsd);
+    if (update.sector) updateData.sector = update.sector;
+
+    const portfolio = updateTransaction(ticker, parsedIndex, updateData);
+    return NextResponse.json(portfolio);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to update transaction" },
       { status: 500 }
     );
   }
