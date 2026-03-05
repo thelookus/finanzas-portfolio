@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { auth } from "@/lib/auth";
 import { getAnthropicClient, AI_MODEL, getSystemPrefix, createStreamingResponse } from "@/lib/ai";
 import { getPortfolio } from "@/lib/portfolio";
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const store = await cookies();
     const locale = store.get("locale")?.value || "es-AR";
     const isEN = locale === "en";
@@ -17,7 +21,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const portfolio = getPortfolio();
+    const portfolio = await getPortfolio(session.user.id);
     const currentTickers = portfolio.holdings.map((h) => `${h.ticker} (${h.sector})`);
 
     const prompt = isEN

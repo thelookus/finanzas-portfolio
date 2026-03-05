@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { auth } from "@/lib/auth";
 import { getAnthropicClient, AI_MODEL, getSystemPrefix, createStreamingResponse } from "@/lib/ai";
 import { getPortfolio } from "@/lib/portfolio";
 import { getQuotes } from "@/lib/yahoo-finance";
@@ -96,10 +97,13 @@ What I would do in the next 2-3 months with a monthly budget of ~$100.`;
 
 export async function POST() {
   try {
+    const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const store = await cookies();
     const locale = store.get("locale")?.value || "es-AR";
 
-    const portfolio = getPortfolio();
+    const portfolio = await getPortfolio(session.user.id);
     const tickers = portfolio.holdings.map((h) => h.ticker);
     const quotes = await getQuotes(tickers);
     const holdings = enrichHoldings(portfolio.holdings, quotes);

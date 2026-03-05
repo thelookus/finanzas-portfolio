@@ -8,6 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import {
   Table,
   TableBody,
   TableCell,
@@ -18,22 +25,21 @@ import {
 import { Transaction } from "@/types";
 import { formatCurrency, formatShares } from "@/lib/calculations";
 import { format } from "date-fns";
-import { Trash } from "@phosphor-icons/react";
-
-interface IndexedTransaction extends Transaction {
-  holdingIndex: number;
-}
+import { Trash, PencilSimple } from "@phosphor-icons/react";
+import { TransactionEditForm } from "@/components/portfolio/transaction-edit-form";
 
 interface TransactionHistoryProps {
-  transactions: IndexedTransaction[];
+  transactions: Transaction[];
+  existingTickers: string[];
 }
 
-export function TransactionHistory({ transactions }: TransactionHistoryProps) {
+export function TransactionHistory({ transactions, existingTickers }: TransactionHistoryProps) {
   const router = useRouter();
   const t = useTranslations("Transaction");
   const [filter, setFilter] = useState("");
-  const [deletingKey, setDeletingKey] = useState<string | null>(null);
-  const [confirmKey, setConfirmKey] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [confirmId, setConfirmId] = useState<number | null>(null);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   const sorted = [...transactions].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -45,28 +51,28 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
       )
     : sorted;
 
-  async function handleDelete(ticker: string, holdingIndex: number, rowKey: string) {
-    if (confirmKey !== rowKey) {
-      setConfirmKey(rowKey);
+  async function handleDelete(txn: Transaction) {
+    if (confirmId !== txn.id) {
+      setConfirmId(txn.id);
       return;
     }
 
-    setDeletingKey(rowKey);
+    setDeletingId(txn.id);
     try {
       const res = await fetch(
-        `/api/portfolio?ticker=${encodeURIComponent(ticker)}&index=${holdingIndex}`,
+        `/api/portfolio?id=${txn.id}`,
         { method: "DELETE" }
       );
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to delete");
       }
-      setConfirmKey(null);
+      setConfirmId(null);
       router.refresh();
     } catch (err) {
       console.error("Delete failed:", err);
     } finally {
-      setDeletingKey(null);
+      setDeletingId(null);
     }
   }
 
@@ -96,12 +102,11 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
             </TableHeader>
             <TableBody>
               {filtered.map((txn) => {
-                const rowKey = `${txn.ticker}-${txn.holdingIndex}`;
-                const isConfirming = confirmKey === rowKey;
-                const isDeleting = deletingKey === rowKey;
+                const isConfirming = confirmId === txn.id;
+                const isDeleting = deletingId === txn.id;
 
                 return (
-                  <TableRow key={rowKey} className="hover:bg-accent/50">
+                  <TableRow key={txn.id} className="hover:bg-accent/50">
                     <TableCell className="text-sm text-muted-foreground">
                       {format(new Date(txn.date), "MMM d, yyyy")}
                     </TableCell>
@@ -123,18 +128,28 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
                       {formatCurrency(txn.costUsd)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant={isConfirming ? "destructive" : "ghost"}
-                        size="icon-xs"
-                        disabled={isDeleting}
-                        onClick={() => handleDelete(txn.ticker, txn.holdingIndex, rowKey)}
-                        title={isConfirming ? t("confirmDelete") : t("deleteTransaction")}
-                        onBlur={() => {
-                          if (isConfirming) setTimeout(() => setConfirmKey(null), 200);
-                        }}
-                      >
-                        <Trash size={14} />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          onClick={() => setEditingTransaction(txn)}
+                          title={t("editTransaction")}
+                        >
+                          <PencilSimple size={14} />
+                        </Button>
+                        <Button
+                          variant={isConfirming ? "destructive" : "ghost"}
+                          size="icon-xs"
+                          disabled={isDeleting}
+                          onClick={() => handleDelete(txn)}
+                          title={isConfirming ? t("confirmDelete") : t("deleteTransaction")}
+                          onBlur={() => {
+                            if (isConfirming) setTimeout(() => setConfirmId(null), 200);
+                          }}
+                        >
+                          <Trash size={14} />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -143,6 +158,25 @@ export function TransactionHistory({ transactions }: TransactionHistoryProps) {
           </Table>
         </div>
       </CardContent>
+
+      <Sheet
+        open={editingTransaction !== null}
+        onOpenChange={(open) => { if (!open) setEditingTransaction(null); }}
+      >
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>{t("editTransaction")}</SheetTitle>
+            <SheetDescription>{t("editDescription")}</SheetDescription>
+          </SheetHeader>
+          {editingTransaction && (
+            <TransactionEditForm
+              transaction={editingTransaction}
+              existingTickers={existingTickers}
+              onClose={() => setEditingTransaction(null)}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
     </Card>
   );
 }

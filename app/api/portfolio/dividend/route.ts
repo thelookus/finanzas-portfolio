@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { addDividend } from "@/lib/portfolio";
 
 export async function POST(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   try {
     const body = await request.json();
     const { date, ticker, amount } = body;
@@ -26,7 +30,7 @@ export async function POST(request: NextRequest) {
       amount: Number(amount),
     };
 
-    const portfolio = addDividend(dividend);
+    const portfolio = await addDividend(session.user.id, dividend);
     return NextResponse.json(portfolio);
   } catch (error) {
     return NextResponse.json(

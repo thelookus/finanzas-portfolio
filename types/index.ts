@@ -1,4 +1,5 @@
 export interface Transaction {
+  id: number;
   ticker: string;
   date: string;
   costUsd: number;
@@ -15,6 +16,7 @@ export interface Holding {
 }
 
 export interface Dividend {
+  id: number;
   date: string;
   ticker: string;
   amount: number;
@@ -101,6 +103,7 @@ export interface Opportunity {
 }
 
 export interface WatchlistItem {
+  id: number;
   ticker: string;
   addedAt: string;
   notes?: string;

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { getPortfolio, getWatchlist } from "@/lib/portfolio";
 import { getQuotes, getChart } from "@/lib/yahoo-finance";
 import { computeTechnicalAnalysis } from "@/lib/technical-analysis";
@@ -6,8 +7,11 @@ import { scoreOpportunity } from "@/lib/scanner";
 
 export async function GET() {
   try {
-    const portfolio = getPortfolio();
-    const watchlist = getWatchlist();
+    const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const portfolio = await getPortfolio(session.user.id);
+    const watchlist = await getWatchlist(session.user.id);
 
     const allTickers = [
       ...new Set([

@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { auth } from "@/lib/auth";
 import { getPortfolio } from "@/lib/portfolio";
 import { getQuotes } from "@/lib/yahoo-finance";
 import { enrichHoldings } from "@/lib/calculations";
@@ -18,7 +19,9 @@ export const dynamic = "force-dynamic";
 
 async function DashboardContent() {
   const t = await getTranslations("Dashboard");
-  const portfolio = getPortfolio();
+  const session = await auth();
+  const userId = session!.user!.id as string;
+  const portfolio = await getPortfolio(userId);
   const tickers = portfolio.holdings.map((h) => h.ticker);
   const quotes = await getQuotes(tickers);
   const holdings = enrichHoldings(portfolio.holdings, quotes);
@@ -91,9 +94,8 @@ async function DashboardContent() {
       {/* Transactions & Dividends */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TransactionHistory
-          transactions={portfolio.holdings.flatMap((h) =>
-            h.transactions.map((t, i) => ({ ...t, holdingIndex: i }))
-          )}
+          transactions={portfolio.holdings.flatMap((h) => h.transactions)}
+          existingTickers={portfolio.holdings.map((h) => h.ticker.toUpperCase())}
         />
         <DividendTracker dividends={portfolio.dividends} />
       </div>
